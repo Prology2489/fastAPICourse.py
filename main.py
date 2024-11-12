@@ -1,4 +1,10 @@
-print("hello world")
-print("hey there")
-print("little tim")
-print("hi bobby")
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/api-endpoint")
+async def first_api():
+    return {"message":"Hello Dominc"}
+
+
+
