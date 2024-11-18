@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI # Framework to build APIs Quickly
+from fastapi import FastAPI, Path, Query # Framework to build APIs Quickly
 from pydantic import BaseModel, Field # used for data validation and modeling
 
 app = FastAPI() #initializes a FastAPI application instance
@@ -57,13 +57,13 @@ async def read_all_books():
 
 
 @app.get("/books/{book_id}") #Fetch a specific book from a list of books
-async def read_book(book_id: int):
+async def read_book(book_id: int = Path(gt=0)):  #needs to be greater then 0 or error will occur
     for  book in BOOKS:
         if book.id == book_id:
             return book
 
 @app.get("/books/")   #filter books by rating in FastAPI
-async def read_book_by_rating(book_rating: int):
+async def read_book_by_rating(book_rating: int = Query(gt=0, lt=11)):
     books_to_return = []
     for book in BOOKS:
         if book.rating == book_rating:
@@ -71,7 +71,7 @@ async def read_book_by_rating(book_rating: int):
             return books_to_return
 
 @app.get("/books/publish/")   #filter books by published date
-async def read_book_by_published_date(published_date: int):
+async def read_book_by_published_date(published_date: int = Query(gt=1980, lt=2025)): #ensured query parameter is protected
     books_to_return = []
     for book in BOOKS:
         if book.published_date == published_date:
@@ -97,7 +97,7 @@ async def Update_book(book: BookRequest): #loop through the books to update the 
 
 
 @app.delete("/books/[book_id]")
-async def delete_book(book_id: int): #delete book function
+async def delete_book(book_id: int = Path(gt=0)): #delete book function + added path validation 
     for i in range(len(BOOKS)): #loop through all books that match the ID then we can delete that item.
         if BOOKS[i].id == book_id:
             BOOKS.pop(i)
