@@ -25,7 +25,7 @@ class BookRequest(BaseModel): #allows validation and converts data that can be s
     description: str =Field(min_length=1, max_length=100)
     rating: int = Field(gt=-1, lt=11)
 
-    model_config = {
+    model_config = {   #this gives an outlay for people adding a new book
         "json_schema_extra":{
             "example":{
                 "title": "author of the book",
@@ -52,6 +52,21 @@ async def read_all_books():
     return BOOKS
 
 
+@app.get("/books/{book_id}") #Fetch a specific book from a list of books
+async def read_book(book_id: int):
+    for  book in BOOKS:
+        if book.id == book_id:
+            return book
+
+@app.get("/books/")   #filter books by rating in FastAPI
+async def read_book_by_rating(book_rating: int):
+    books_to_return = []
+    for book in BOOKS:
+        if book.rating == book_rating:
+            books_to_return.append(book)
+            return books_to_return
+
+
 
 @app.post("/create-book") #Add a new book to the BOOKS list.
 async def create_book(book_request: BookRequest):    #BookRequest: Ensures API input validation.
@@ -64,4 +79,8 @@ def find_book_id(book: Book):  #The function assigns an id dynamically based on 
                                                             # BOOKS[-1] refers to the last item in the list, and BOOKS must not be empty for this to work.
     return book
 
-
+@app.put("/books/update_book")   # this function will allow us to update a book.
+async def Update_book(book: BookRequest):
+    for i in range(len(BOOKS)):
+        if BOOKS[i].id == book.id:
+            BOOKS[i] = book
