@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import FastAPI, Path, Query # Framework to build APIs Quickly
+from fastapi import FastAPI, Path, Query, HTTPException # Framework to build APIs Quickly
 from pydantic import BaseModel, Field # used for data validation and modeling
 
 app = FastAPI() #initializes a FastAPI application instance
@@ -12,7 +12,7 @@ class Book:    #Represents a book with attributes
     rating: int
     published_date: int
     
-    def __init__(self, id, title, author, description, rating, published_date ): #Initialization
+    def __init__(self, id, title, author, description, rating, published_date): #Initialization
         self.id = id
         self.title = title
         self.author = author
@@ -58,9 +58,10 @@ async def read_all_books():
 
 @app.get("/books/{book_id}") #Fetch a specific book from a list of books
 async def read_book(book_id: int = Path(gt=0)):  #needs to be greater then 0 or error will occur
-    for  book in BOOKS:
-        if book.id == book_id:
+    for  book in BOOKS: #looping throuhg books
+        if book.id == book_id:  # when book matches book ID we pass then we return the book
             return book
+    raise HTTPException(status_code=404, detail="Item not found")  #this will raise HTTP Exception and show an error 
 
 @app.get("/books/")   #filter books by rating in FastAPI
 async def read_book_by_rating(book_rating: int = Query(gt=0, lt=11)):
@@ -91,18 +92,28 @@ def find_book_id(book: Book):  #The function assigns an id dynamically based on 
 
 @app.put("/books/update_book")   # this function will allow us to update a book.
 async def Update_book(book: BookRequest): #loop through the books to update the book i want
+    book_changed = False
     for i in range(len(BOOKS)):
-        if BOOKS[i].id == book.id:
+        if BOOKS[i].id == book.id: #when we find ID of the ID we pass in, we swap new book with that books ID
             BOOKS[i] = book
+            book_changed = True #successfully change book will be true
+    if not book_changed:
+        raise HTTPException(status_code=404, detail="Item not found")
 
 
-@app.delete("/books/[book_id]")
+
+@app.delete("/books/{book_id}")
 async def delete_book(book_id: int = Path(gt=0)): #delete book function + added path validation 
+    book_changed = False
     for i in range(len(BOOKS)): #loop through all books that match the ID then we can delete that item.
         if BOOKS[i].id == book_id:
             BOOKS.pop(i)
+            book_changed = True
             break
-
+    if not book_changed:
+        raise HTTPException(status_code=404, detail="Item not found")
+  
+        
 
 
 
