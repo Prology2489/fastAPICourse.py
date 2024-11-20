@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import FastAPI, Path, Query, HTTPException # Framework to build APIs Quickly
 from pydantic import BaseModel, Field # used for data validation and modeling
+from starlette import status
 
 app = FastAPI() #initializes a FastAPI application instance
 
@@ -51,19 +52,19 @@ BOOKS = [        # A list of Book objects to simulate a database
     Book(6, "Blade Runner", "denis villeneuve", "neo noir science fiction", 3, 2022)    
 ]
 
-@app.get("/books") #Fetch all books from the BOOKS list
+@app.get("/books", status_code=status.HTTP_200_OK) #Fetch all books from the BOOKS list + after success of retunring all book we want to return 200 code
 async def read_all_books():
     return BOOKS
 
 
-@app.get("/books/{book_id}") #Fetch a specific book from a list of books
+@app.get("/books/{book_id}", status_code=status.HTTP_200_OK) #Fetch a specific book from a list of books
 async def read_book(book_id: int = Path(gt=0)):  #needs to be greater then 0 or error will occur
     for  book in BOOKS: #looping throuhg books
         if book.id == book_id:  # when book matches book ID we pass then we return the book
             return book
     raise HTTPException(status_code=404, detail="Item not found")  #this will raise HTTP Exception and show an error 
 
-@app.get("/books/")   #filter books by rating in FastAPI
+@app.get("/books/", status_code=status.HTTP_200_OK)   #filter books by rating in FastAPI
 async def read_book_by_rating(book_rating: int = Query(gt=0, lt=11)):
     books_to_return = []
     for book in BOOKS:
@@ -71,7 +72,7 @@ async def read_book_by_rating(book_rating: int = Query(gt=0, lt=11)):
             books_to_return.append(book)
             return books_to_return
 
-@app.get("/books/publish/")   #filter books by published date
+@app.get("/books/publish/", status_code=status.HTTP_200_OK)   #filter books by published date + 200 code means everything is ok and here is the data
 async def read_book_by_published_date(published_date: int = Query(gt=1980, lt=2025)): #ensured query parameter is protected
     books_to_return = []
     for book in BOOKS:
@@ -79,7 +80,7 @@ async def read_book_by_published_date(published_date: int = Query(gt=1980, lt=20
             books_to_return.append(book)
     return books_to_return
 
-@app.post("/create-book") #Add a new book to the BOOKS list.
+@app.post("/create-book", status_code=status.HTTP_201_CREATED) #Add a new book to the BOOKS list.
 async def create_book(book_request: BookRequest):    #BookRequest: Ensures API input validation.
     new_book = Book(**book_request.model_dump()) 
     BOOKS.append(find_book_id(new_book))
@@ -90,7 +91,7 @@ def find_book_id(book: Book):  #The function assigns an id dynamically based on 
                                                             # BOOKS[-1] refers to the last item in the list, and BOOKS must not be empty for this to work.
     return book
 
-@app.put("/books/update_book")   # this function will allow us to update a book.
+@app.put("/books/update_book", status_code=status.HTTP_204_NO_CONTENT)   # this function will allow us to update a book.
 async def Update_book(book: BookRequest): #loop through the books to update the book i want
     book_changed = False
     for i in range(len(BOOKS)):
@@ -102,7 +103,7 @@ async def Update_book(book: BookRequest): #loop through the books to update the 
 
 
 
-@app.delete("/books/{book_id}")
+@app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT) #204 code is just enhancing or changing with returning any data
 async def delete_book(book_id: int = Path(gt=0)): #delete book function + added path validation 
     book_changed = False
     for i in range(len(BOOKS)): #loop through all books that match the ID then we can delete that item.
@@ -111,7 +112,7 @@ async def delete_book(book_id: int = Path(gt=0)): #delete book function + added 
             book_changed = True
             break
     if not book_changed:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="Item not found") #catching unusal like ID that doesnt exist then returning HTTP exception back to the user
   
         
 
