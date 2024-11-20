@@ -47,3 +47,29 @@ async def create_tool(db: db_dependency, todo_request: TodoRequest):
     
     db.add(todo_model) #getting the database ready
     db.commit() #actually doing the transaction to the database
+
+
+@app.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def Update_todo(db: db_dependency,
+                      todo_request: TodoRequest,
+                      todo_id: int  = Path(gt=0)):
+    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+    if todo_model is None:
+        raise HTTPException(status_code=404, detail="Todo not found.")
+    
+    todo_model.title = todo_request.title
+    todo_model.description = todo_request.description
+    todo_model.Priority = todo_request.Priority
+    todo_model.complete = todo_request.complete
+
+    db.add(todo_model)
+    db.commit()
+
+@app.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo(db: db_dependency, todo_id: int =Path(gt=0)):
+    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+    if todo_model is None:
+        raise HTTPException(status_code=404, detail="Todo not Found.")
+    db.query(Todos).filter(Todos.id == todo_id).delete()
+
+    db.commit()
