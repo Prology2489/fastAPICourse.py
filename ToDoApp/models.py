@@ -9,4 +9,4 @@ class Todos(Base): # new table in database called todos
     title = Column(String)
     description = Column(String)
     Priority = Column(Integer)
-    complete - Column(Boolean, default=False)
+    complete = Column(Boolean, default=False)
