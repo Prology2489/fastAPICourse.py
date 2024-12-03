@@ -14,13 +14,16 @@ from datetime import timedelta, datetime, timezone
 
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/auth',
+    tags=['auth']
+)
 
 SECRET_KEY = 'f1301773c620d411ebe3824330a5cc187d04344f24d49f9b48c21fe7fb07e24f'
 ALGORITHM = 'HS256'
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_bearer = OAuth2PasswordBearer(tokenurl='token')
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
 class CreateUserRequest(BaseModel):
     username : str
@@ -73,7 +76,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail='could not validate user.')
 
-@router.post("/auth", status_code=status.HTTP_201_CREATED)  #created new users and saved it to our database
+@router.post("/", status_code=status.HTTP_201_CREATED)  #created new users and saved it to our database
 async def create_user(db: db_dependency,
                       create_user_request: CreateUserRequest):
     create_user_model = Users(
@@ -96,7 +99,8 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
                                  db: db_dependency):
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
-        return 'Failed Authentication' # this will fail if user does not work
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail='could not validate user.') # this will fail if user does not work
     token = create_access_token(user.username, user.id, timedelta(minutes=20))
 
 
